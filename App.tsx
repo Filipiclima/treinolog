@@ -3,7 +3,7 @@ import { NavigationContainer, Theme } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import BuscaExerciciosScreen from './src/screens/BuscaExerciciosScreen';
+import ExerciciosStack from './src/navigation/ExerciciosStack';
 import HistoricoScreen from './src/screens/HistoricoScreen';
 import TreinoDoDiaScreen from './src/screens/TreinoDoDiaScreen';
 import { cores } from './src/theme';
@@ -54,9 +54,10 @@ export default function App() {
         >
           <Abas.Screen
             name="Exercicios"
-            component={BuscaExerciciosScreen}
+            component={ExerciciosStack}
             options={{
-              title: 'Exercícios',
+              // A pilha interna já desenha o próprio cabeçalho.
+              headerShown: false,
               tabBarLabel: 'Exercícios',
               tabBarIcon: ({ focused }) => <Icone simbolo="🔍" ativo={focused} />,
             }}

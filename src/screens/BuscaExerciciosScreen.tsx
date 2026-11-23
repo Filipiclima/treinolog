@@ -1,3 +1,4 @@
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,12 +10,15 @@ import {
   View,
 } from 'react-native';
 import CampoBusca from '../components/CampoBusca';
+import { ExerciciosStackParamList } from '../navigation/tipos';
 import { obterCatalogo } from '../services/catalogo';
 import { filtrarPorNome } from '../services/wger';
 import { cores, espaco, raio } from '../theme';
 import { Exercicio } from '../types';
 
-export default function BuscaExerciciosScreen() {
+type Props = NativeStackScreenProps<ExerciciosStackParamList, 'Busca'>;
+
+export default function BuscaExerciciosScreen({ navigation }: Props) {
   const [catalogo, setCatalogo] = useState<Exercicio[]>([]);
   const [termo, setTermo] = useState('');
   const [carregando, setCarregando] = useState(true);
@@ -79,15 +83,29 @@ export default function BuscaExerciciosScreen() {
         ListEmptyComponent={
           <Text style={styles.aviso}>Nenhum exercício encontrado para "{termo}".</Text>
         }
-        renderItem={({ item }) => <Cartao exercicio={item} />}
+        renderItem={({ item }) => (
+          <Cartao
+            exercicio={item}
+            onAbrir={() => navigation.navigate('Detalhe', { exercicio: item })}
+          />
+        )}
       />
     </View>
   );
 }
 
-function Cartao({ exercicio }: { exercicio: Exercicio }) {
+function Cartao({
+  exercicio,
+  onAbrir,
+}: {
+  exercicio: Exercicio;
+  onAbrir: () => void;
+}) {
   return (
-    <Pressable style={({ pressed }) => [styles.cartao, pressed && styles.cartaoAtivo]}>
+    <Pressable
+      onPress={onAbrir}
+      style={({ pressed }) => [styles.cartao, pressed && styles.cartaoAtivo]}
+    >
       <Text style={styles.nome}>{exercicio.nome}</Text>
       {exercicio.descricao ? (
         <Text style={styles.descricao} numberOfLines={2}>
