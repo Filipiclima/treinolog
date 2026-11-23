@@ -1,70 +1,95 @@
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { NavigationContainer, Theme } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import { cores, espaco, raio } from './src/theme';
+import { StyleSheet, Text } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import BuscaExerciciosScreen from './src/screens/BuscaExerciciosScreen';
+import HistoricoScreen from './src/screens/HistoricoScreen';
+import TreinoDoDiaScreen from './src/screens/TreinoDoDiaScreen';
+import { cores } from './src/theme';
+
+const Abas = createBottomTabNavigator();
+
+/** Tema escuro do app aplicado à navegação. */
+const tema: Theme = {
+  dark: true,
+  colors: {
+    primary: cores.destaque,
+    background: cores.fundo,
+    card: cores.superficie,
+    text: cores.texto,
+    border: cores.borda,
+    notification: cores.destaque,
+  },
+  fonts: {
+    regular: { fontFamily: 'System', fontWeight: '400' },
+    medium: { fontFamily: 'System', fontWeight: '500' },
+    bold: { fontFamily: 'System', fontWeight: '700' },
+    heavy: { fontFamily: 'System', fontWeight: '800' },
+  },
+};
+
+/** Ícone simples em emoji, para não depender de uma biblioteca de ícones. */
+function Icone({ simbolo, ativo }: { simbolo: string; ativo: boolean }) {
+  return <Text style={[styles.icone, !ativo && styles.iconeInativo]}>{simbolo}</Text>;
+}
 
 export default function App() {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaProvider>
       <StatusBar style="light" />
-      <View style={styles.conteudo}>
-        <Text style={styles.marca}>TreinoLog</Text>
-        <Text style={styles.subtitulo}>
-          Seu diário de treinos. Busque o exercício, registre as séries e
-          acompanhe a evolução da carga.
-        </Text>
-
-        <View style={styles.cartao}>
-          <Text style={styles.cartaoTitulo}>Próximos passos</Text>
-          <Text style={styles.cartaoItem}>Navegação entre as telas</Text>
-          <Text style={styles.cartaoItem}>Busca de exercícios na API wger</Text>
-          <Text style={styles.cartaoItem}>Registro local de séries e cargas</Text>
-        </View>
-      </View>
-    </SafeAreaView>
+      <NavigationContainer theme={tema}>
+        <Abas.Navigator
+          screenOptions={{
+            headerStyle: { backgroundColor: cores.fundo },
+            headerTitleStyle: { color: cores.texto },
+            headerShadowVisible: false,
+            tabBarStyle: {
+              backgroundColor: cores.superficie,
+              borderTopColor: cores.borda,
+            },
+            tabBarActiveTintColor: cores.destaque,
+            tabBarInactiveTintColor: cores.textoFraco,
+          }}
+        >
+          <Abas.Screen
+            name="Exercicios"
+            component={BuscaExerciciosScreen}
+            options={{
+              title: 'Exercícios',
+              tabBarLabel: 'Exercícios',
+              tabBarIcon: ({ focused }) => <Icone simbolo="🔍" ativo={focused} />,
+            }}
+          />
+          <Abas.Screen
+            name="Treino"
+            component={TreinoDoDiaScreen}
+            options={{
+              title: 'Treino do dia',
+              tabBarLabel: 'Treino',
+              tabBarIcon: ({ focused }) => <Icone simbolo="🏋️" ativo={focused} />,
+            }}
+          />
+          <Abas.Screen
+            name="Historico"
+            component={HistoricoScreen}
+            options={{
+              title: 'Histórico',
+              tabBarLabel: 'Histórico',
+              tabBarIcon: ({ focused }) => <Icone simbolo="📈" ativo={focused} />,
+            }}
+          />
+        </Abas.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: cores.fundo,
+  icone: {
+    fontSize: 18,
   },
-  conteudo: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: espaco.g,
-    gap: espaco.m,
-  },
-  marca: {
-    color: cores.destaque,
-    fontSize: 40,
-    fontWeight: '800',
-    letterSpacing: -1,
-  },
-  subtitulo: {
-    color: cores.textoFraco,
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  cartao: {
-    marginTop: espaco.m,
-    backgroundColor: cores.superficie,
-    borderColor: cores.borda,
-    borderWidth: 1,
-    borderRadius: raio.m,
-    padding: espaco.m,
-    gap: espaco.p,
-  },
-  cartaoTitulo: {
-    color: cores.texto,
-    fontSize: 13,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: espaco.pp,
-  },
-  cartaoItem: {
-    color: cores.textoFraco,
-    fontSize: 15,
+  iconeInativo: {
+    opacity: 0.5,
   },
 });

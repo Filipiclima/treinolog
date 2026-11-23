@@ -1,11 +1,14 @@
 // Tipos do domínio do TreinoLog.
 
-/** Exercício como vem da API da wger, já reduzido ao que o app usa. */
+/** Exercício vindo da API da wger, reduzido ao que o app usa. */
 export type Exercicio = {
+  /** Id do exercício na wger (campo "exercise" da tradução). */
   id: number;
   nome: string;
-  grupoMuscular: string;
+  /** Categoria traduzida, por exemplo "Peito". Carregada no detalhe. */
+  grupoMuscular?: string;
   equipamento?: string;
+  imagem?: string;
   descricao?: string;
 };
 
