@@ -3,17 +3,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import CampoBusca from '../components/CampoBusca';
+import CartaoExercicio from '../components/CartaoExercicio';
+import FiltroGrupos from '../components/FiltroGrupos';
 import { ExerciciosStackParamList } from '../navigation/tipos';
 import { obterCatalogo } from '../services/catalogo';
-import { filtrarPorNome } from '../services/wger';
-import { cores, espaco, raio } from '../theme';
+import { filtrarExercicios, GRUPOS_MUSCULARES } from '../services/wger';
+import { cores, espaco } from '../theme';
 import { Exercicio } from '../types';
 
 type Props = NativeStackScreenProps<ExerciciosStackParamList, 'Busca'>;
@@ -21,6 +22,7 @@ type Props = NativeStackScreenProps<ExerciciosStackParamList, 'Busca'>;
 export default function BuscaExerciciosScreen({ navigation }: Props) {
   const [catalogo, setCatalogo] = useState<Exercicio[]>([]);
   const [termo, setTermo] = useState('');
+  const [grupo, setGrupo] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -43,8 +45,8 @@ export default function BuscaExerciciosScreen({ navigation }: Props) {
   }, [carregar]);
 
   const resultados = useMemo(
-    () => filtrarPorNome(catalogo, termo),
-    [catalogo, termo]
+    () => filtrarExercicios(catalogo, termo, grupo),
+    [catalogo, termo, grupo]
   );
 
   if (carregando) {
@@ -58,10 +60,19 @@ export default function BuscaExerciciosScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.titulo}>Exercícios</Text>
+
       <CampoBusca valor={termo} onMudar={setTermo} />
 
+      <FiltroGrupos
+        grupos={GRUPOS_MUSCULARES}
+        selecionado={grupo}
+        onSelecionar={setGrupo}
+      />
+
       <Text style={styles.contador}>
-        {resultados.length} de {catalogo.length} exercícios
+        {resultados.length}{' '}
+        {resultados.length === 1 ? 'exercício encontrado' : 'exercícios encontrados'}
       </Text>
 
       {erro && <Text style={styles.erro}>{erro}</Text>}
@@ -70,6 +81,7 @@ export default function BuscaExerciciosScreen({ navigation }: Props) {
         data={resultados}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.lista}
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={atualizando}
@@ -81,10 +93,12 @@ export default function BuscaExerciciosScreen({ navigation }: Props) {
           />
         }
         ListEmptyComponent={
-          <Text style={styles.aviso}>Nenhum exercício encontrado para "{termo}".</Text>
+          <Text style={styles.aviso}>
+            Nenhum exercício encontrado com esses filtros.
+          </Text>
         }
         renderItem={({ item }) => (
-          <Cartao
+          <CartaoExercicio
             exercicio={item}
             onAbrir={() => navigation.navigate('Detalhe', { exercicio: item })}
           />
@@ -94,74 +108,39 @@ export default function BuscaExerciciosScreen({ navigation }: Props) {
   );
 }
 
-function Cartao({
-  exercicio,
-  onAbrir,
-}: {
-  exercicio: Exercicio;
-  onAbrir: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onAbrir}
-      style={({ pressed }) => [styles.cartao, pressed && styles.cartaoAtivo]}
-    >
-      <Text style={styles.nome}>{exercicio.nome}</Text>
-      {exercicio.descricao ? (
-        <Text style={styles.descricao} numberOfLines={2}>
-          {exercicio.descricao}
-        </Text>
-      ) : null}
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: cores.fundo,
     paddingHorizontal: espaco.m,
-    paddingTop: espaco.m,
-    gap: espaco.p,
+    paddingTop: espaco.p,
+    gap: espaco.m,
   },
   centro: {
     alignItems: 'center',
     justifyContent: 'center',
     gap: espaco.m,
   },
+  titulo: {
+    color: cores.texto,
+    fontSize: 32,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
   contador: {
     color: cores.textoFraco,
     fontSize: 13,
+    marginBottom: -espaco.p,
   },
   lista: {
-    gap: espaco.p,
+    gap: espaco.p + 2,
     paddingBottom: espaco.gg,
-  },
-  cartao: {
-    backgroundColor: cores.superficie,
-    borderColor: cores.borda,
-    borderWidth: 1,
-    borderRadius: raio.m,
-    padding: espaco.m,
-    gap: espaco.pp,
-  },
-  cartaoAtivo: {
-    borderColor: cores.destaque,
-  },
-  nome: {
-    color: cores.texto,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  descricao: {
-    color: cores.textoFraco,
-    fontSize: 13,
-    lineHeight: 18,
   },
   aviso: {
     color: cores.textoFraco,
     fontSize: 14,
     textAlign: 'center',
+    paddingTop: espaco.g,
   },
   erro: {
     color: cores.erro,

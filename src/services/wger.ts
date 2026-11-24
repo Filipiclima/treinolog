@@ -1,20 +1,9 @@
-/**
- * Acesso à API pública da wger (https://wger.de/api/v2).
- *
- * A wger descontinuou o endpoint /exercise/search/, e o filtro por nome em
- * /exercise-translation/ só aceita correspondência exata. Por isso o app baixa
- * o catálogo de exercícios em português uma única vez e faz a busca por nome
- * localmente, o que também permite usar o app sem internet depois da primeira
- * carga.
- */
 import { Exercicio } from '../types';
 
 const BASE = 'https://wger.de/api/v2';
-
-/** Id do idioma português na wger. */
 const IDIOMA_PT = 7;
+const POR_PAGINA = 200;
 
-/** Categorias da wger vêm em inglês; traduzimos para exibir. */
 const CATEGORIAS: Record<string, string> = {
   Abs: 'Abdômen',
   Arms: 'Braços',
@@ -26,18 +15,33 @@ const CATEGORIAS: Record<string, string> = {
   Shoulders: 'Ombros',
 };
 
-type RespostaPaginada<T> = {
-  count: number;
-  next: string | null;
-  results: T[];
+const EQUIPAMENTOS: Record<string, string> = {
+  Barbell: 'Barra',
+  Bench: 'Banco',
+  'Cable machine': 'Cabo',
+  Dumbbell: 'Halteres',
+  'Gym mat': 'Colchonete',
+  'Incline bench': 'Banco inclinado',
+  Kettlebell: 'Kettlebell',
+  'Pull-up bar': 'Barra fixa',
+  'Resistance band': 'Elástico',
+  'SZ-Bar': 'Barra W',
+  'Swiss Ball': 'Bola suíça',
+  'none (bodyweight exercise)': 'Peso corporal',
 };
 
-type Traducao = {
-  id: number;
-  name: string;
-  exercise: number;
-  description: string;
-};
+export const GRUPOS_MUSCULARES = [
+  'Peito',
+  'Costas',
+  'Pernas',
+  'Ombros',
+  'Braços',
+  'Abdômen',
+  'Panturrilhas',
+  'Cardio',
+];
+
+type Pagina<T> = { count: number; next: string | null; results: T[] };
 
 async function pegarJson<T>(url: string): Promise<T> {
   const resposta = await fetch(url, { headers: { Accept: 'application/json' } });
@@ -47,7 +51,19 @@ async function pegarJson<T>(url: string): Promise<T> {
   return resposta.json() as Promise<T>;
 }
 
-/** Remove as tags HTML que a wger envia no campo de descrição. */
+async function pegarTudo<T>(caminho: string): Promise<T[]> {
+  let url: string | null = `${BASE}/${caminho}&limit=${POR_PAGINA}&format=json`;
+  const tudo: T[] = [];
+
+  for (let pagina = 0; url && pagina < 15; pagina += 1) {
+    const dados: Pagina<T> = await pegarJson(url);
+    tudo.push(...dados.results);
+    url = dados.next;
+  }
+
+  return tudo;
+}
+
 function limparHtml(texto: string): string {
   return texto
     .replace(/<li>/gi, '\n• ')
@@ -58,68 +74,79 @@ function limparHtml(texto: string): string {
     .trim();
 }
 
-/**
- * Baixa o catálogo completo de exercícios em português, seguindo a paginação
- * da API. São pouco mais de quatrocentos exercícios.
- */
+type Traducao = { name: string; exercise: number; description: string };
+type ExercicioBruto = { id: number; category: number; equipment: number[] };
+type Nomeado = { id: number; name: string };
+type Imagem = { exercise: number; image: string; is_main: boolean };
+
 export async function baixarCatalogo(): Promise<Exercicio[]> {
-  let url: string | null =
-    `${BASE}/exercise-translation/?language=${IDIOMA_PT}&limit=100&format=json`;
-  const exercicios: Exercicio[] = [];
+  const [categorias, equipamentos, traducoes, exercicios, imagens] = await Promise.all([
+    pegarTudo<Nomeado>('exercisecategory/?'),
+    pegarTudo<Nomeado>('equipment/?'),
+    pegarTudo<Traducao>(`exercise-translation/?language=${IDIOMA_PT}`),
+    pegarTudo<ExercicioBruto>('exercise/?'),
+    pegarTudo<Imagem>('exerciseimage/?is_main=true'),
+  ]);
+
+  const nomeCategoria = new Map(
+    categorias.map((c) => [c.id, CATEGORIAS[c.name] ?? c.name])
+  );
+  const nomeEquipamento = new Map(
+    equipamentos.map((e) => [e.id, EQUIPAMENTOS[e.name] ?? e.name])
+  );
+  const dadosExercicio = new Map(exercicios.map((e) => [e.id, e]));
+  const imagemPrincipal = new Map(imagens.map((i) => [i.exercise, i.image]));
+
+  const catalogo: Exercicio[] = [];
   const vistos = new Set<number>();
 
-  for (let pagina = 0; url && pagina < 20; pagina += 1) {
-    const dados: RespostaPaginada<Traducao> = await pegarJson(url);
+  for (const traducao of traducoes) {
+    const nome = traducao.name?.trim();
+    if (!nome || vistos.has(traducao.exercise)) continue;
+    vistos.add(traducao.exercise);
 
-    for (const traducao of dados.results) {
-      const nome = traducao.name?.trim();
-      if (!nome || vistos.has(traducao.exercise)) continue;
-      vistos.add(traducao.exercise);
-      exercicios.push({
-        id: traducao.exercise,
-        nome,
-        descricao: traducao.description ? limparHtml(traducao.description) : undefined,
-      });
-    }
+    const bruto = dadosExercicio.get(traducao.exercise);
+    const equipamento = (bruto?.equipment ?? [])
+      .map((id) => nomeEquipamento.get(id))
+      .filter(Boolean)
+      .join(', ');
 
-    url = dados.next;
+    catalogo.push({
+      id: traducao.exercise,
+      nome,
+      grupoMuscular: bruto ? nomeCategoria.get(bruto.category) : undefined,
+      equipamento: equipamento || undefined,
+      imagem: imagemPrincipal.get(traducao.exercise),
+      descricao: traducao.description ? limparHtml(traducao.description) : undefined,
+    });
   }
 
-  return exercicios.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  return catalogo.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 }
 
-type DetalheExercicio = {
-  id: number;
-  category?: { id: number; name: string };
-  equipment?: { id: number; name: string }[];
-  images?: { image: string; is_main: boolean }[];
+type DetalheBruto = {
+  muscles?: { name: string; name_en: string }[];
+  muscles_secondary?: { name: string; name_en: string }[];
 };
 
-/**
- * Busca grupo muscular, equipamento e imagem de um exercício. Esses dados não
- * vêm na listagem de traduções, então são carregados ao abrir o detalhe.
- */
-export async function buscarDetalhe(id: number): Promise<Partial<Exercicio>> {
-  const dados = await pegarJson<DetalheExercicio>(
-    `${BASE}/exerciseinfo/${id}/?format=json`
-  );
-
-  const categoria = dados.category?.name;
-  const principal =
-    dados.images?.find((imagem) => imagem.is_main) ?? dados.images?.[0];
-
-  return {
-    grupoMuscular: categoria ? CATEGORIAS[categoria] ?? categoria : undefined,
-    equipamento: dados.equipment?.map((e) => e.name).join(', ') || undefined,
-    imagem: principal?.image,
-  };
+export async function buscarMusculos(id: number): Promise<string[]> {
+  const dados = await pegarJson<DetalheBruto>(`${BASE}/exerciseinfo/${id}/?format=json`);
+  const principais = dados.muscles ?? [];
+  return principais.map((musculo) => musculo.name_en || musculo.name);
 }
 
-/** Filtra o catálogo por nome, ignorando acentos e caixa. */
-export function filtrarPorNome(catalogo: Exercicio[], termo: string): Exercicio[] {
+export function filtrarExercicios(
+  catalogo: Exercicio[],
+  termo: string,
+  grupo: string | null
+): Exercicio[] {
   const alvo = normalizar(termo);
-  if (!alvo) return catalogo;
-  return catalogo.filter((exercicio) => normalizar(exercicio.nome).includes(alvo));
+
+  return catalogo.filter((exercicio) => {
+    const casaGrupo = !grupo || exercicio.grupoMuscular === grupo;
+    const casaTermo = !alvo || normalizar(exercicio.nome).includes(alvo);
+    return casaGrupo && casaTermo;
+  });
 }
 
 function normalizar(texto: string): string {

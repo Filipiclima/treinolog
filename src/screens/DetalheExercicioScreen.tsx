@@ -11,7 +11,7 @@ import {
 import Botao from '../components/Botao';
 import { useTreino } from '../contexto/TreinoContext';
 import { ExerciciosStackParamList } from '../navigation/tipos';
-import { buscarDetalhe } from '../services/wger';
+import { buscarMusculos } from '../services/wger';
 import { cores, espaco, raio } from '../theme';
 import { Exercicio } from '../types';
 
@@ -29,8 +29,8 @@ export default function DetalheExercicioScreen({ route }: Props) {
 
     async function carregar() {
       try {
-        const extras = await buscarDetalhe(route.params.exercicio.id);
-        if (ativo) setExercicio((atual) => ({ ...atual, ...extras }));
+        const musculos = await buscarMusculos(route.params.exercicio.id);
+        if (ativo) setExercicio((atual) => ({ ...atual, musculos }));
       } catch {
         if (ativo)
           setErro('Não foi possível carregar os detalhes deste exercício.');
@@ -77,6 +77,9 @@ export default function DetalheExercicioScreen({ route }: Props) {
         ) : null}
         {exercicio.equipamento ? (
           <Etiqueta rotulo="Equipamento" valor={exercicio.equipamento} />
+        ) : null}
+        {exercicio.musculos && exercicio.musculos.length > 0 ? (
+          <Etiqueta rotulo="Músculos" valor={exercicio.musculos.join(', ')} />
         ) : null}
       </View>
 

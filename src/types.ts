@@ -8,6 +8,7 @@ export type Exercicio = {
   equipamento?: string;
   imagem?: string;
   descricao?: string;
+  musculos?: string[];
 };
 
 /** Uma série executada de um exercício. */

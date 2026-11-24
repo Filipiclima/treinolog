@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Exercicio } from '../types';
 import { baixarCatalogo } from './wger';
 
-const CHAVE = '@treinolog:catalogo';
+const CHAVE = '@treinolog:catalogo:v2';
 const VALIDADE_MS = 7 * 24 * 60 * 60 * 1000;
 
 type CatalogoSalvo = {

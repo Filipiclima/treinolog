@@ -1,10 +1,13 @@
 export const cores = {
-  fundo: '#11151c',
-  superficie: '#1c232e',
-  borda: '#2c3542',
-  destaque: '#3ddc84',
-  texto: '#f2f5f9',
-  textoFraco: '#8d99ab',
+  fundo: '#0b0f17',
+  superficie: '#151b26',
+  superficieAlta: '#1c2434',
+  borda: '#232c3d',
+  destaque: '#3b82f6',
+  destaqueFraco: '#1e3a6b',
+  favorito: '#f0a830',
+  texto: '#f4f7fb',
+  textoFraco: '#8b97ab',
   erro: '#ff6b6b',
 };
 
@@ -18,6 +21,7 @@ export const espaco = {
 
 export const raio = {
   p: 8,
-  m: 12,
-  g: 20,
+  m: 14,
+  g: 24,
+  redondo: 999,
 };

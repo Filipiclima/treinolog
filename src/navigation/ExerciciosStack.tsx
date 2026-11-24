@@ -21,7 +21,7 @@ export default function ExerciciosStack() {
       <Pilha.Screen
         name="Busca"
         component={BuscaExerciciosScreen}
-        options={{ title: 'Exercícios' }}
+        options={{ headerShown: false }}
       />
       <Pilha.Screen
         name="Detalhe"

@@ -1,7 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, Theme } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TreinoProvider } from './src/contexto/TreinoContext';
 import ExerciciosStack from './src/navigation/ExerciciosStack';
@@ -31,11 +31,6 @@ const tema: Theme = {
 };
 
 /** Ícone simples em emoji, para não depender de uma biblioteca de ícones. */
-function Icone({ simbolo, ativo }: { simbolo: string; ativo: boolean }) {
-  return (
-    <Text style={[styles.icone, !ativo && styles.iconeInativo]}>{simbolo}</Text>
-  );
-}
 
 export default function App() {
   return (
@@ -51,6 +46,9 @@ export default function App() {
               tabBarStyle: {
                 backgroundColor: cores.superficie,
                 borderTopColor: cores.borda,
+                height: 62,
+                paddingTop: 6,
+                paddingBottom: 8,
               },
               tabBarActiveTintColor: cores.destaque,
               tabBarInactiveTintColor: cores.textoFraco,
@@ -62,8 +60,8 @@ export default function App() {
               options={{
                 headerShown: false,
                 tabBarLabel: 'Exercícios',
-                tabBarIcon: ({ focused }) => (
-                  <Icone simbolo="🔍" ativo={focused} />
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons name="barbell-outline" size={size} color={color} />
                 ),
               }}
             />
@@ -73,8 +71,8 @@ export default function App() {
               options={{
                 title: 'Treino do dia',
                 tabBarLabel: 'Treino',
-                tabBarIcon: ({ focused }) => (
-                  <Icone simbolo="🏋️" ativo={focused} />
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons name="list-outline" size={size} color={color} />
                 ),
               }}
             />
@@ -84,8 +82,8 @@ export default function App() {
               options={{
                 title: 'Histórico',
                 tabBarLabel: 'Histórico',
-                tabBarIcon: ({ focused }) => (
-                  <Icone simbolo="📈" ativo={focused} />
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons name="time-outline" size={size} color={color} />
                 ),
               }}
             />
@@ -95,12 +93,3 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  icone: {
-    fontSize: 18,
-  },
-  iconeInativo: {
-    opacity: 0.5,
-  },
-});
