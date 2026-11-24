@@ -1,5 +1,3 @@
-// Paleta e espaçamentos usados nas telas do app.
-
 export const cores = {
   fundo: '#11151c',
   superficie: '#1c232e',

@@ -10,7 +10,7 @@ import { Exercicio } from '../types';
 import { baixarCatalogo } from './wger';
 
 const CHAVE = '@treinolog:catalogo';
-const VALIDADE_MS = 7 * 24 * 60 * 60 * 1000; // uma semana
+const VALIDADE_MS = 7 * 24 * 60 * 60 * 1000;
 
 type CatalogoSalvo = {
   salvoEm: number;
@@ -44,7 +44,6 @@ export async function obterCatalogo(forcarAtualizacao = false): Promise<Exercici
     await AsyncStorage.setItem(CHAVE, JSON.stringify(paraSalvar));
     return exercicios;
   } catch (erro) {
-    // Sem internet, um cache vencido ainda é melhor do que lista vazia.
     if (cache && cache.exercicios.length > 0) return cache.exercicios;
     throw erro;
   }

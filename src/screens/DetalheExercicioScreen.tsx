@@ -8,6 +8,8 @@ import {
   Text,
   View,
 } from 'react-native';
+import Botao from '../components/Botao';
+import { useTreino } from '../contexto/TreinoContext';
 import { ExerciciosStackParamList } from '../navigation/tipos';
 import { buscarDetalhe } from '../services/wger';
 import { cores, espaco, raio } from '../theme';
@@ -16,11 +18,11 @@ import { Exercicio } from '../types';
 type Props = NativeStackScreenProps<ExerciciosStackParamList, 'Detalhe'>;
 
 export default function DetalheExercicioScreen({ route }: Props) {
-  // O exercício chega da busca já com nome e descrição; grupo muscular,
-  // equipamento e imagem só existem no endpoint de detalhe da wger.
   const [exercicio, setExercicio] = useState<Exercicio>(route.params.exercicio);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const { adicionarExercicio, estaNoTreino } = useTreino();
+  const jaAdicionado = estaNoTreino(exercicio.id);
 
   useEffect(() => {
     let ativo = true;
@@ -30,7 +32,8 @@ export default function DetalheExercicioScreen({ route }: Props) {
         const extras = await buscarDetalhe(route.params.exercicio.id);
         if (ativo) setExercicio((atual) => ({ ...atual, ...extras }));
       } catch {
-        if (ativo) setErro('Não foi possível carregar os detalhes deste exercício.');
+        if (ativo)
+          setErro('Não foi possível carregar os detalhes deste exercício.');
       } finally {
         if (ativo) setCarregando(false);
       }
@@ -38,13 +41,15 @@ export default function DetalheExercicioScreen({ route }: Props) {
 
     carregar();
     return () => {
-      // Evita atualizar o estado se a tela for fechada durante a requisição.
       ativo = false;
     };
   }, [route.params.exercicio.id]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.conteudo}
+    >
       <Text style={styles.nome}>{exercicio.nome}</Text>
 
       {carregando && <ActivityIndicator color={cores.destaque} />}
@@ -57,6 +62,14 @@ export default function DetalheExercicioScreen({ route }: Props) {
           resizeMode="contain"
         />
       ) : null}
+
+      <Botao
+        texto={
+          jaAdicionado ? 'Já está no treino de hoje' : 'Adicionar ao treino'
+        }
+        onPress={() => adicionarExercicio(exercicio)}
+        desabilitado={jaAdicionado}
+      />
 
       <View style={styles.etiquetas}>
         {exercicio.grupoMuscular ? (

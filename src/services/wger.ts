@@ -68,7 +68,6 @@ export async function baixarCatalogo(): Promise<Exercicio[]> {
   const exercicios: Exercicio[] = [];
   const vistos = new Set<number>();
 
-  // Limite de páginas como proteção contra laço infinito.
   for (let pagina = 0; url && pagina < 20; pagina += 1) {
     const dados: RespostaPaginada<Traducao> = await pegarJson(url);
 

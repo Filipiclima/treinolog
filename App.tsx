@@ -3,6 +3,7 @@ import { NavigationContainer, Theme } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { TreinoProvider } from './src/contexto/TreinoContext';
 import ExerciciosStack from './src/navigation/ExerciciosStack';
 import HistoricoScreen from './src/screens/HistoricoScreen';
 import TreinoDoDiaScreen from './src/screens/TreinoDoDiaScreen';
@@ -31,57 +32,66 @@ const tema: Theme = {
 
 /** Ícone simples em emoji, para não depender de uma biblioteca de ícones. */
 function Icone({ simbolo, ativo }: { simbolo: string; ativo: boolean }) {
-  return <Text style={[styles.icone, !ativo && styles.iconeInativo]}>{simbolo}</Text>;
+  return (
+    <Text style={[styles.icone, !ativo && styles.iconeInativo]}>{simbolo}</Text>
+  );
 }
 
 export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      <NavigationContainer theme={tema}>
-        <Abas.Navigator
-          screenOptions={{
-            headerStyle: { backgroundColor: cores.fundo },
-            headerTitleStyle: { color: cores.texto },
-            headerShadowVisible: false,
-            tabBarStyle: {
-              backgroundColor: cores.superficie,
-              borderTopColor: cores.borda,
-            },
-            tabBarActiveTintColor: cores.destaque,
-            tabBarInactiveTintColor: cores.textoFraco,
-          }}
-        >
-          <Abas.Screen
-            name="Exercicios"
-            component={ExerciciosStack}
-            options={{
-              // A pilha interna já desenha o próprio cabeçalho.
-              headerShown: false,
-              tabBarLabel: 'Exercícios',
-              tabBarIcon: ({ focused }) => <Icone simbolo="🔍" ativo={focused} />,
+      <TreinoProvider>
+        <NavigationContainer theme={tema}>
+          <Abas.Navigator
+            screenOptions={{
+              headerStyle: { backgroundColor: cores.fundo },
+              headerTitleStyle: { color: cores.texto },
+              headerShadowVisible: false,
+              tabBarStyle: {
+                backgroundColor: cores.superficie,
+                borderTopColor: cores.borda,
+              },
+              tabBarActiveTintColor: cores.destaque,
+              tabBarInactiveTintColor: cores.textoFraco,
             }}
-          />
-          <Abas.Screen
-            name="Treino"
-            component={TreinoDoDiaScreen}
-            options={{
-              title: 'Treino do dia',
-              tabBarLabel: 'Treino',
-              tabBarIcon: ({ focused }) => <Icone simbolo="🏋️" ativo={focused} />,
-            }}
-          />
-          <Abas.Screen
-            name="Historico"
-            component={HistoricoScreen}
-            options={{
-              title: 'Histórico',
-              tabBarLabel: 'Histórico',
-              tabBarIcon: ({ focused }) => <Icone simbolo="📈" ativo={focused} />,
-            }}
-          />
-        </Abas.Navigator>
-      </NavigationContainer>
+          >
+            <Abas.Screen
+              name="Exercicios"
+              component={ExerciciosStack}
+              options={{
+                headerShown: false,
+                tabBarLabel: 'Exercícios',
+                tabBarIcon: ({ focused }) => (
+                  <Icone simbolo="🔍" ativo={focused} />
+                ),
+              }}
+            />
+            <Abas.Screen
+              name="Treino"
+              component={TreinoDoDiaScreen}
+              options={{
+                title: 'Treino do dia',
+                tabBarLabel: 'Treino',
+                tabBarIcon: ({ focused }) => (
+                  <Icone simbolo="🏋️" ativo={focused} />
+                ),
+              }}
+            />
+            <Abas.Screen
+              name="Historico"
+              component={HistoricoScreen}
+              options={{
+                title: 'Histórico',
+                tabBarLabel: 'Histórico',
+                tabBarIcon: ({ focused }) => (
+                  <Icone simbolo="📈" ativo={focused} />
+                ),
+              }}
+            />
+          </Abas.Navigator>
+        </NavigationContainer>
+      </TreinoProvider>
     </SafeAreaProvider>
   );
 }
