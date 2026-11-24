@@ -46,9 +46,7 @@ export default function App() {
               tabBarStyle: {
                 backgroundColor: cores.superficie,
                 borderTopColor: cores.borda,
-                height: 62,
                 paddingTop: 6,
-                paddingBottom: 8,
               },
               tabBarActiveTintColor: cores.destaque,
               tabBarInactiveTintColor: cores.textoFraco,

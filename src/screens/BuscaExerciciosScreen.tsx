@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CampoBusca from '../components/CampoBusca';
 import CartaoExercicio from '../components/CartaoExercicio';
 import FiltroGrupos from '../components/FiltroGrupos';
@@ -20,6 +21,7 @@ import { Exercicio } from '../types';
 type Props = NativeStackScreenProps<ExerciciosStackParamList, 'Busca'>;
 
 export default function BuscaExerciciosScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const [catalogo, setCatalogo] = useState<Exercicio[]>([]);
   const [termo, setTermo] = useState('');
   const [grupo, setGrupo] = useState<string | null>(null);
@@ -51,7 +53,9 @@ export default function BuscaExerciciosScreen({ navigation }: Props) {
 
   if (carregando) {
     return (
-      <View style={[styles.container, styles.centro]}>
+      <View
+        style={[styles.container, styles.centro, { paddingTop: insets.top }]}
+      >
         <ActivityIndicator color={cores.destaque} size="large" />
         <Text style={styles.aviso}>Carregando catálogo de exercícios</Text>
       </View>
@@ -59,7 +63,7 @@ export default function BuscaExerciciosScreen({ navigation }: Props) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top + espaco.p }]}>
       <Text style={styles.titulo}>Exercícios</Text>
 
       <CampoBusca valor={termo} onMudar={setTermo} />
@@ -113,7 +117,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: cores.fundo,
     paddingHorizontal: espaco.m,
-    paddingTop: espaco.p,
     gap: espaco.m,
   },
   centro: {
