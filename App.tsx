@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, Theme } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { FavoritosProvider } from './src/contexto/FavoritosContext';
 import { TreinoProvider } from './src/contexto/TreinoContext';
 import ExerciciosStack from './src/navigation/ExerciciosStack';
 import HistoricoScreen from './src/screens/HistoricoScreen';
@@ -36,58 +37,64 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      <TreinoProvider>
-        <NavigationContainer theme={tema}>
-          <Abas.Navigator
-            screenOptions={{
-              headerStyle: { backgroundColor: cores.fundo },
-              headerTitleStyle: { color: cores.texto },
-              headerShadowVisible: false,
-              tabBarStyle: {
-                backgroundColor: cores.superficie,
-                borderTopColor: cores.borda,
-                paddingTop: 6,
-              },
-              tabBarActiveTintColor: cores.destaque,
-              tabBarInactiveTintColor: cores.textoFraco,
-            }}
-          >
-            <Abas.Screen
-              name="Exercicios"
-              component={ExerciciosStack}
-              options={{
-                headerShown: false,
-                tabBarLabel: 'Exercícios',
-                tabBarIcon: ({ color, size }) => (
-                  <Ionicons name="barbell-outline" size={size} color={color} />
-                ),
+      <FavoritosProvider>
+        <TreinoProvider>
+          <NavigationContainer theme={tema}>
+            <Abas.Navigator
+              screenOptions={{
+                headerStyle: { backgroundColor: cores.fundo },
+                headerTitleStyle: { color: cores.texto },
+                headerShadowVisible: false,
+                tabBarStyle: {
+                  backgroundColor: cores.superficie,
+                  borderTopColor: cores.borda,
+                  paddingTop: 6,
+                },
+                tabBarActiveTintColor: cores.destaque,
+                tabBarInactiveTintColor: cores.textoFraco,
               }}
-            />
-            <Abas.Screen
-              name="Treino"
-              component={TreinoDoDiaScreen}
-              options={{
-                title: 'Treino do dia',
-                tabBarLabel: 'Treino',
-                tabBarIcon: ({ color, size }) => (
-                  <Ionicons name="list-outline" size={size} color={color} />
-                ),
-              }}
-            />
-            <Abas.Screen
-              name="Historico"
-              component={HistoricoScreen}
-              options={{
-                title: 'Histórico',
-                tabBarLabel: 'Histórico',
-                tabBarIcon: ({ color, size }) => (
-                  <Ionicons name="time-outline" size={size} color={color} />
-                ),
-              }}
-            />
-          </Abas.Navigator>
-        </NavigationContainer>
-      </TreinoProvider>
+            >
+              <Abas.Screen
+                name="Exercicios"
+                component={ExerciciosStack}
+                options={{
+                  headerShown: false,
+                  tabBarLabel: 'Exercícios',
+                  tabBarIcon: ({ color, size }) => (
+                    <Ionicons
+                      name="barbell-outline"
+                      size={size}
+                      color={color}
+                    />
+                  ),
+                }}
+              />
+              <Abas.Screen
+                name="Treino"
+                component={TreinoDoDiaScreen}
+                options={{
+                  title: 'Treino do dia',
+                  tabBarLabel: 'Treino',
+                  tabBarIcon: ({ color, size }) => (
+                    <Ionicons name="list-outline" size={size} color={color} />
+                  ),
+                }}
+              />
+              <Abas.Screen
+                name="Historico"
+                component={HistoricoScreen}
+                options={{
+                  title: 'Histórico',
+                  tabBarLabel: 'Histórico',
+                  tabBarIcon: ({ color, size }) => (
+                    <Ionicons name="time-outline" size={size} color={color} />
+                  ),
+                }}
+              />
+            </Abas.Navigator>
+          </NavigationContainer>
+        </TreinoProvider>
+      </FavoritosProvider>
     </SafeAreaProvider>
   );
 }

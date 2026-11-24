@@ -17,9 +17,16 @@ const ICONES: Record<string, keyof typeof Ionicons.glyphMap> = {
 type Props = {
   exercicio: Exercicio;
   onAbrir: () => void;
+  favorito: boolean;
+  onAlternarFavorito: () => void;
 };
 
-export default function CartaoExercicio({ exercicio, onAbrir }: Props) {
+export default function CartaoExercicio({
+  exercicio,
+  onAbrir,
+  favorito,
+  onAlternarFavorito,
+}: Props) {
   const legenda = [exercicio.grupoMuscular, exercicio.equipamento]
     .filter(Boolean)
     .join(' · ');
@@ -52,7 +59,17 @@ export default function CartaoExercicio({ exercicio, onAbrir }: Props) {
         {legenda ? <Text style={styles.legenda}>{legenda}</Text> : null}
       </View>
 
-      <Ionicons name="chevron-forward" size={18} color={cores.textoFraco} />
+      <Pressable
+        onPress={onAlternarFavorito}
+        hitSlop={10}
+        style={({ pressed }) => pressed && styles.estrelaPressionada}
+      >
+        <Ionicons
+          name={favorito ? 'star' : 'star-outline'}
+          size={22}
+          color={favorito ? cores.favorito : cores.textoFraco}
+        />
+      </Pressable>
     </Pressable>
   );
 }
@@ -99,5 +116,8 @@ const styles = StyleSheet.create({
   legenda: {
     color: cores.textoFraco,
     fontSize: 13,
+  },
+  estrelaPressionada: {
+    opacity: 0.6,
   },
 });

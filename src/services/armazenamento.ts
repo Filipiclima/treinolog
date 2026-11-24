@@ -49,3 +49,24 @@ export async function salvarHistorico(historico: Treino[]): Promise<void> {
     return;
   }
 }
+
+const CHAVE_FAVORITOS = '@treinolog:favoritos';
+
+export async function lerFavoritos(): Promise<number[]> {
+  try {
+    const bruto = await AsyncStorage.getItem(CHAVE_FAVORITOS);
+    if (!bruto) return [];
+    const ids = JSON.parse(bruto) as number[];
+    return Array.isArray(ids) ? ids.filter((id) => typeof id === 'number') : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function salvarFavoritos(ids: number[]): Promise<void> {
+  try {
+    await AsyncStorage.setItem(CHAVE_FAVORITOS, JSON.stringify(ids));
+  } catch {
+    return;
+  }
+}

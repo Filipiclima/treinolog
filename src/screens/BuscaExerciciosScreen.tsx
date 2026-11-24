@@ -3,19 +3,22 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CampoBusca from '../components/CampoBusca';
 import CartaoExercicio from '../components/CartaoExercicio';
 import FiltroGrupos from '../components/FiltroGrupos';
+import { useFavoritos } from '../contexto/FavoritosContext';
 import { ExerciciosStackParamList } from '../navigation/tipos';
 import { obterCatalogo } from '../services/catalogo';
 import { filtrarExercicios, GRUPOS_MUSCULARES } from '../services/wger';
-import { cores, espaco } from '../theme';
+import { cores, espaco, raio } from '../theme';
 import { Exercicio } from '../types';
 
 type Props = NativeStackScreenProps<ExerciciosStackParamList, 'Busca'>;
@@ -25,6 +28,8 @@ export default function BuscaExerciciosScreen({ navigation }: Props) {
   const [catalogo, setCatalogo] = useState<Exercicio[]>([]);
   const [termo, setTermo] = useState('');
   const [grupo, setGrupo] = useState<string | null>(null);
+  const [soFavoritos, setSoFavoritos] = useState(false);
+  const { ehFavorito, alternarFavorito, total: totalFavoritos } = useFavoritos();
   const [carregando, setCarregando] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -46,10 +51,10 @@ export default function BuscaExerciciosScreen({ navigation }: Props) {
     carregar();
   }, [carregar]);
 
-  const resultados = useMemo(
-    () => filtrarExercicios(catalogo, termo, grupo),
-    [catalogo, termo, grupo]
-  );
+  const resultados = useMemo(() => {
+    const filtrados = filtrarExercicios(catalogo, termo, grupo);
+    return soFavoritos ? filtrados.filter((item) => ehFavorito(item.id)) : filtrados;
+  }, [catalogo, termo, grupo, soFavoritos, ehFavorito]);
 
   if (carregando) {
     return (
@@ -64,7 +69,31 @@ export default function BuscaExerciciosScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + espaco.p }]}>
-      <Text style={styles.titulo}>Exercícios</Text>
+      <View style={styles.cabecalho}>
+        <Text style={styles.titulo}>Exercícios</Text>
+        <Pressable
+          onPress={() => setSoFavoritos((atual) => !atual)}
+          style={({ pressed }) => [
+            styles.botaoFavoritos,
+            soFavoritos && styles.botaoFavoritosAtivo,
+            pressed && styles.pressionado,
+          ]}
+        >
+          <Ionicons
+            name={soFavoritos ? 'star' : 'star-outline'}
+            size={16}
+            color={soFavoritos ? cores.fundo : cores.favorito}
+          />
+          <Text
+            style={[
+              styles.botaoFavoritosTexto,
+              soFavoritos && styles.botaoFavoritosTextoAtivo,
+            ]}
+          >
+            Favoritos{totalFavoritos > 0 ? ` ${totalFavoritos}` : ''}
+          </Text>
+        </Pressable>
+      </View>
 
       <CampoBusca valor={termo} onMudar={setTermo} />
 
@@ -98,13 +127,17 @@ export default function BuscaExerciciosScreen({ navigation }: Props) {
         }
         ListEmptyComponent={
           <Text style={styles.aviso}>
-            Nenhum exercício encontrado com esses filtros.
+            {soFavoritos && totalFavoritos === 0
+              ? 'Você ainda não favoritou nenhum exercício. Toque na estrela de um exercício para salvá-lo aqui.'
+              : 'Nenhum exercício encontrado com esses filtros.'}
           </Text>
         }
         renderItem={({ item }) => (
           <CartaoExercicio
             exercicio={item}
             onAbrir={() => navigation.navigate('Detalhe', { exercicio: item })}
+            favorito={ehFavorito(item.id)}
+            onAlternarFavorito={() => alternarFavorito(item.id)}
           />
         )}
       />
@@ -124,11 +157,43 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: espaco.m,
   },
+  cabecalho: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: espaco.p,
+  },
   titulo: {
     color: cores.texto,
     fontSize: 32,
     fontWeight: '800',
     letterSpacing: -0.5,
+  },
+  botaoFavoritos: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espaco.pp + 2,
+    backgroundColor: cores.superficie,
+    borderColor: cores.borda,
+    borderWidth: 1,
+    borderRadius: raio.redondo,
+    paddingVertical: espaco.p,
+    paddingHorizontal: espaco.m,
+  },
+  botaoFavoritosAtivo: {
+    backgroundColor: cores.favorito,
+    borderColor: cores.favorito,
+  },
+  botaoFavoritosTexto: {
+    color: cores.texto,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  botaoFavoritosTextoAtivo: {
+    color: cores.fundo,
+  },
+  pressionado: {
+    opacity: 0.75,
   },
   contador: {
     color: cores.textoFraco,

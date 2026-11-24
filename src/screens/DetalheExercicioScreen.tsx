@@ -3,12 +3,15 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Botao from '../components/Botao';
+import { useFavoritos } from '../contexto/FavoritosContext';
 import { useTreino } from '../contexto/TreinoContext';
 import { ExerciciosStackParamList } from '../navigation/tipos';
 import { buscarMusculos } from '../services/wger';
@@ -22,6 +25,8 @@ export default function DetalheExercicioScreen({ route }: Props) {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const { adicionarExercicio, estaNoTreino } = useTreino();
+  const { ehFavorito, alternarFavorito } = useFavoritos();
+  const favorito = ehFavorito(exercicio.id);
   const jaAdicionado = estaNoTreino(exercicio.id);
 
   useEffect(() => {
@@ -63,13 +68,31 @@ export default function DetalheExercicioScreen({ route }: Props) {
         />
       ) : null}
 
-      <Botao
-        texto={
-          jaAdicionado ? 'Já está no treino de hoje' : 'Adicionar ao treino'
-        }
-        onPress={() => adicionarExercicio(exercicio)}
-        desabilitado={jaAdicionado}
-      />
+      <View style={styles.acoes}>
+        <View style={styles.acaoPrincipal}>
+          <Botao
+            texto={
+              jaAdicionado ? 'Já está no treino de hoje' : 'Adicionar ao treino'
+            }
+            onPress={() => adicionarExercicio(exercicio)}
+            desabilitado={jaAdicionado}
+          />
+        </View>
+        <Pressable
+          onPress={() => alternarFavorito(exercicio.id)}
+          style={({ pressed }) => [
+            styles.botaoEstrela,
+            favorito && styles.botaoEstrelaAtivo,
+            pressed && styles.pressionado,
+          ]}
+        >
+          <Ionicons
+            name={favorito ? 'star' : 'star-outline'}
+            size={22}
+            color={favorito ? cores.fundo : cores.favorito}
+          />
+        </Pressable>
+      </View>
 
       <View style={styles.etiquetas}>
         {exercicio.grupoMuscular ? (
@@ -130,6 +153,30 @@ const styles = StyleSheet.create({
     borderRadius: raio.m,
     borderWidth: 1,
     borderColor: cores.borda,
+  },
+  acoes: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: espaco.p,
+  },
+  acaoPrincipal: {
+    flex: 1,
+  },
+  botaoEstrela: {
+    width: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: raio.m,
+    borderWidth: 1,
+    borderColor: cores.borda,
+    backgroundColor: cores.superficie,
+  },
+  botaoEstrelaAtivo: {
+    backgroundColor: cores.favorito,
+    borderColor: cores.favorito,
+  },
+  pressionado: {
+    opacity: 0.75,
   },
   etiquetas: {
     flexDirection: 'row',
