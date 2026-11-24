@@ -1,8 +1,19 @@
-import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { lerTreinoAtual, salvarTreinoAtual } from '../services/armazenamento';
 import { Exercicio, ItemTreino, Serie, Treino } from '../types';
 
 type ValorContexto = {
   treino: Treino;
+  carregando: boolean;
   adicionarExercicio: (exercicio: Exercicio) => void;
   removerExercicio: (exercicioId: number) => void;
   estaNoTreino: (exercicioId: number) => boolean;
@@ -39,6 +50,23 @@ function criarTreinoVazio(): Treino {
 
 export function TreinoProvider({ children }: { children: ReactNode }) {
   const [treino, setTreino] = useState<Treino>(criarTreinoVazio);
+  const [carregando, setCarregando] = useState(true);
+  const carregado = useRef(false);
+
+  useEffect(() => {
+    async function restaurar() {
+      const salvo = await lerTreinoAtual();
+      if (salvo) setTreino(salvo);
+      carregado.current = true;
+      setCarregando(false);
+    }
+    restaurar();
+  }, []);
+
+  useEffect(() => {
+    if (!carregado.current) return;
+    salvarTreinoAtual(treino);
+  }, [treino]);
 
   const adicionarExercicio = useCallback((exercicio: Exercicio) => {
     setTreino((atual) => {
@@ -94,6 +122,7 @@ export function TreinoProvider({ children }: { children: ReactNode }) {
   const valor = useMemo(
     () => ({
       treino,
+      carregando,
       adicionarExercicio,
       removerExercicio,
       estaNoTreino,
@@ -103,6 +132,7 @@ export function TreinoProvider({ children }: { children: ReactNode }) {
     }),
     [
       treino,
+      carregando,
       adicionarExercicio,
       removerExercicio,
       estaNoTreino,

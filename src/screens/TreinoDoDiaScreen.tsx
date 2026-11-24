@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -20,7 +21,16 @@ function volumeDoItem(item: ItemTreino): number {
 }
 
 export default function TreinoDoDiaScreen() {
-  const { treino, removerExercicio, adicionarSerie, removerSerie } = useTreino();
+  const { treino, carregando, removerExercicio, adicionarSerie, removerSerie } =
+    useTreino();
+
+  if (carregando) {
+    return (
+      <View style={[styles.container, styles.centro]}>
+        <ActivityIndicator color={cores.destaque} size="large" />
+      </View>
+    );
+  }
 
   if (treino.itens.length === 0) {
     return (
