@@ -1,11 +1,13 @@
 import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
-import { Exercicio, ItemTreino, Treino } from '../types';
+import { Exercicio, ItemTreino, Serie, Treino } from '../types';
 
 type ValorContexto = {
   treino: Treino;
   adicionarExercicio: (exercicio: Exercicio) => void;
   removerExercicio: (exercicioId: number) => void;
   estaNoTreino: (exercicioId: number) => boolean;
+  adicionarSerie: (exercicioId: number, repeticoes: number, carga: number) => void;
+  removerSerie: (exercicioId: number, serieId: string) => void;
   limparTreino: () => void;
 };
 
@@ -61,11 +63,53 @@ export function TreinoProvider({ children }: { children: ReactNode }) {
     [treino.itens]
   );
 
+  const adicionarSerie = useCallback(
+    (exercicioId: number, repeticoes: number, carga: number) => {
+      const novaSerie: Serie = { id: gerarId(), repeticoes, carga };
+      setTreino((atual) => ({
+        ...atual,
+        itens: atual.itens.map((item) =>
+          item.exercicio.id === exercicioId
+            ? { ...item, series: [...item.series, novaSerie] }
+            : item
+        ),
+      }));
+    },
+    []
+  );
+
+  const removerSerie = useCallback((exercicioId: number, serieId: string) => {
+    setTreino((atual) => ({
+      ...atual,
+      itens: atual.itens.map((item) =>
+        item.exercicio.id === exercicioId
+          ? { ...item, series: item.series.filter((serie) => serie.id !== serieId) }
+          : item
+      ),
+    }));
+  }, []);
+
   const limparTreino = useCallback(() => setTreino(criarTreinoVazio()), []);
 
   const valor = useMemo(
-    () => ({ treino, adicionarExercicio, removerExercicio, estaNoTreino, limparTreino }),
-    [treino, adicionarExercicio, removerExercicio, estaNoTreino, limparTreino]
+    () => ({
+      treino,
+      adicionarExercicio,
+      removerExercicio,
+      estaNoTreino,
+      adicionarSerie,
+      removerSerie,
+      limparTreino,
+    }),
+    [
+      treino,
+      adicionarExercicio,
+      removerExercicio,
+      estaNoTreino,
+      adicionarSerie,
+      removerSerie,
+      limparTreino,
+    ]
   );
 
   return <TreinoContext.Provider value={valor}>{children}</TreinoContext.Provider>;

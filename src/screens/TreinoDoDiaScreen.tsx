@@ -1,11 +1,26 @@
-import { FlatList, StyleSheet, Text, View } from 'react-native';
-import Botao from '../components/Botao';
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import RegistroSeries from '../components/RegistroSeries';
 import { useTreino } from '../contexto/TreinoContext';
 import { cores, espaco, raio } from '../theme';
 import { ItemTreino } from '../types';
 
+function volumeDoItem(item: ItemTreino): number {
+  return item.series.reduce(
+    (total, serie) => total + serie.repeticoes * serie.carga,
+    0
+  );
+}
+
 export default function TreinoDoDiaScreen() {
-  const { treino, removerExercicio } = useTreino();
+  const { treino, removerExercicio, adicionarSerie, removerSerie } = useTreino();
 
   if (treino.itens.length === 0) {
     return (
@@ -19,43 +34,87 @@ export default function TreinoDoDiaScreen() {
     );
   }
 
+  const totalSeries = treino.itens.reduce(
+    (total, item) => total + item.series.length,
+    0
+  );
+  const volumeTotal = treino.itens.reduce(
+    (total, item) => total + volumeDoItem(item),
+    0
+  );
+
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <Text style={styles.titulo}>{treino.titulo}</Text>
       <Text style={styles.resumo}>
         {treino.itens.length}{' '}
-        {treino.itens.length === 1 ? 'exercício' : 'exercícios'}
+        {treino.itens.length === 1 ? 'exercício' : 'exercícios'} · {totalSeries}{' '}
+        {totalSeries === 1 ? 'série' : 'séries'}
+        {volumeTotal > 0 ? ` · ${volumeTotal.toLocaleString('pt-BR')} kg` : ''}
       </Text>
 
       <FlatList
         data={treino.itens}
         keyExtractor={(item) => String(item.exercicio.id)}
         contentContainerStyle={styles.lista}
+        keyboardShouldPersistTaps="handled"
         renderItem={({ item }) => (
-          <Cartao item={item} onRemover={() => removerExercicio(item.exercicio.id)} />
+          <Cartao
+            item={item}
+            onRemover={() => removerExercicio(item.exercicio.id)}
+            onAdicionarSerie={(reps, carga) =>
+              adicionarSerie(item.exercicio.id, reps, carga)
+            }
+            onRemoverSerie={(serieId) => removerSerie(item.exercicio.id, serieId)}
+          />
         )}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
-function Cartao({ item, onRemover }: { item: ItemTreino; onRemover: () => void }) {
+type CartaoProps = {
+  item: ItemTreino;
+  onRemover: () => void;
+  onAdicionarSerie: (repeticoes: number, carga: number) => void;
+  onRemoverSerie: (serieId: string) => void;
+};
+
+function Cartao({ item, onRemover, onAdicionarSerie, onRemoverSerie }: CartaoProps) {
+  const volume = volumeDoItem(item);
+
   return (
     <View style={styles.cartao}>
       <View style={styles.cartaoTopo}>
-        <Text style={styles.nome}>{item.exercicio.nome}</Text>
-        {item.exercicio.grupoMuscular ? (
-          <Text style={styles.grupo}>{item.exercicio.grupoMuscular}</Text>
-        ) : null}
+        <View style={styles.cartaoTexto}>
+          <Text style={styles.nome}>{item.exercicio.nome}</Text>
+          {item.exercicio.grupoMuscular ? (
+            <Text style={styles.grupo}>{item.exercicio.grupoMuscular}</Text>
+          ) : null}
+        </View>
+        <Pressable
+          onPress={onRemover}
+          hitSlop={8}
+          style={({ pressed }) => pressed && styles.pressionado}
+        >
+          <Text style={styles.remover}>remover</Text>
+        </Pressable>
       </View>
 
-      <Text style={styles.series}>
-        {item.series.length === 0
-          ? 'Nenhuma série registrada'
-          : `${item.series.length} séries registradas`}
-      </Text>
+      {volume > 0 && (
+        <Text style={styles.volume}>
+          Volume: {volume.toLocaleString('pt-BR')} kg
+        </Text>
+      )}
 
-      <Botao texto="Remover" onPress={onRemover} variante="perigo" />
+      <RegistroSeries
+        item={item}
+        onAdicionar={onAdicionarSerie}
+        onRemoverSerie={onRemoverSerie}
+      />
     </View>
   );
 }
@@ -97,6 +156,12 @@ const styles = StyleSheet.create({
     gap: espaco.p,
   },
   cartaoTopo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: espaco.p,
+  },
+  cartaoTexto: {
+    flex: 1,
     gap: 2,
   },
   nome: {
@@ -110,9 +175,16 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
-  series: {
+  remover: {
+    color: cores.erro,
+    fontSize: 13,
+  },
+  volume: {
     color: cores.textoFraco,
-    fontSize: 14,
+    fontSize: 13,
+  },
+  pressionado: {
+    opacity: 0.7,
   },
   vazioTitulo: {
     color: cores.texto,
