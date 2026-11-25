@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -8,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import Botao from '../components/Botao';
 import RegistroSeries from '../components/RegistroSeries';
 import { useTreino } from '../contexto/TreinoContext';
 import { cores, espaco, raio } from '../theme';
@@ -21,8 +24,34 @@ function volumeDoItem(item: ItemTreino): number {
 }
 
 export default function TreinoDoDiaScreen() {
-  const { treino, carregando, removerExercicio, adicionarSerie, removerSerie } =
-    useTreino();
+  const {
+    treino,
+    carregando,
+    removerExercicio,
+    adicionarSerie,
+    removerSerie,
+    concluirTreino,
+  } = useTreino();
+  const [aviso, setAviso] = useState<string | null>(null);
+
+  function confirmarConclusao() {
+    Alert.alert(
+      'Concluir treino',
+      'O treino será salvo no histórico e uma nova sessão começa vazia.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Concluir',
+          onPress: () => {
+            const salvou = concluirTreino();
+            if (!salvou) {
+              setAviso('Registre pelo menos uma série antes de concluir.');
+            }
+          },
+        },
+      ]
+    );
+  }
 
   if (carregando) {
     return (
@@ -81,6 +110,12 @@ export default function TreinoDoDiaScreen() {
             onRemoverSerie={(serieId) => removerSerie(item.exercicio.id, serieId)}
           />
         )}
+        ListFooterComponent={
+          <View style={styles.rodape}>
+            {aviso && <Text style={styles.avisoConclusao}>{aviso}</Text>}
+            <Botao texto="Concluir treino" onPress={confirmarConclusao} />
+          </View>
+        }
       />
     </KeyboardAvoidingView>
   );
@@ -156,6 +191,15 @@ const styles = StyleSheet.create({
   lista: {
     gap: espaco.p,
     paddingBottom: espaco.gg,
+  },
+  rodape: {
+    marginTop: espaco.m,
+    gap: espaco.p,
+  },
+  avisoConclusao: {
+    color: cores.erro,
+    fontSize: 13,
+    textAlign: 'center',
   },
   cartao: {
     backgroundColor: cores.superficie,

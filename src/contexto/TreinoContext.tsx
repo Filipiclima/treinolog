@@ -8,7 +8,13 @@ import {
   useRef,
   useState,
 } from 'react';
-import { lerTreinoAtual, salvarTreinoAtual } from '../services/armazenamento';
+import {
+  apagarTreinoAtual,
+  lerHistorico,
+  lerTreinoAtual,
+  salvarHistorico,
+  salvarTreinoAtual,
+} from '../services/armazenamento';
 import { Exercicio, ItemTreino, Serie, Treino } from '../types';
 
 type ValorContexto = {
@@ -20,6 +26,9 @@ type ValorContexto = {
   adicionarSerie: (exercicioId: number, repeticoes: number, carga: number) => void;
   removerSerie: (exercicioId: number, serieId: string) => void;
   limparTreino: () => void;
+  historico: Treino[];
+  concluirTreino: () => boolean;
+  removerDoHistorico: (treinoId: string) => void;
 };
 
 const TreinoContext = createContext<ValorContexto | null>(null);
@@ -50,13 +59,18 @@ function criarTreinoVazio(): Treino {
 
 export function TreinoProvider({ children }: { children: ReactNode }) {
   const [treino, setTreino] = useState<Treino>(criarTreinoVazio);
+  const [historico, setHistorico] = useState<Treino[]>([]);
   const [carregando, setCarregando] = useState(true);
   const carregado = useRef(false);
 
   useEffect(() => {
     async function restaurar() {
-      const salvo = await lerTreinoAtual();
+      const [salvo, historicoSalvo] = await Promise.all([
+        lerTreinoAtual(),
+        lerHistorico(),
+      ]);
       if (salvo) setTreino(salvo);
+      setHistorico(historicoSalvo);
       carregado.current = true;
       setCarregando(false);
     }
@@ -117,7 +131,33 @@ export function TreinoProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const limparTreino = useCallback(() => setTreino(criarTreinoVazio()), []);
+  const limparTreino = useCallback(() => {
+    setTreino(criarTreinoVazio());
+    apagarTreinoAtual();
+  }, []);
+
+  const concluirTreino = useCallback(() => {
+    const temSerie = treino.itens.some((item) => item.series.length > 0);
+    if (!temSerie) return false;
+
+    const concluido: Treino = { ...treino, concluido: true };
+    const novoHistorico = [concluido, ...historico];
+
+    setHistorico(novoHistorico);
+    salvarHistorico(novoHistorico);
+    setTreino(criarTreinoVazio());
+
+    return true;
+  }, [treino, historico]);
+
+  const removerDoHistorico = useCallback(
+    (treinoId: string) => {
+      const novoHistorico = historico.filter((item) => item.id !== treinoId);
+      setHistorico(novoHistorico);
+      salvarHistorico(novoHistorico);
+    },
+    [historico]
+  );
 
   const valor = useMemo(
     () => ({
@@ -129,6 +169,9 @@ export function TreinoProvider({ children }: { children: ReactNode }) {
       adicionarSerie,
       removerSerie,
       limparTreino,
+      historico,
+      concluirTreino,
+      removerDoHistorico,
     }),
     [
       treino,
@@ -139,6 +182,9 @@ export function TreinoProvider({ children }: { children: ReactNode }) {
       adicionarSerie,
       removerSerie,
       limparTreino,
+      historico,
+      concluirTreino,
+      removerDoHistorico,
     ]
   );
 
