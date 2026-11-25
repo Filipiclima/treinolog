@@ -5,3 +5,10 @@ export type ExerciciosStackParamList = {
   Busca: undefined;
   Detalhe: { exercicio: Exercicio };
 };
+
+export type AbasParamList = {
+  Exercicios: undefined;
+  Treino: undefined;
+  Historico: undefined;
+  Ajustes: undefined;
+};

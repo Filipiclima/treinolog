@@ -2,6 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Alert, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { AbasParamList } from '../navigation/tipos';
 import { useTreino } from '../contexto/TreinoContext';
 import {
   agruparPorMes,
@@ -16,8 +19,31 @@ import { cores, espaco, raio } from '../theme';
 import { ItemTreino, Treino } from '../types';
 
 export default function HistoricoScreen() {
-  const { historico, removerDoHistorico } = useTreino();
+  const { historico, removerDoHistorico, alternarFavoritoTreino, treino, repetirTreino } =
+    useTreino();
   const insets = useSafeAreaInsets();
+  const navegacao = useNavigation<BottomTabNavigationProp<AbasParamList>>();
+
+  function confirmarRepeticao(modelo: Treino) {
+    function repetir() {
+      repetirTreino(modelo);
+      navegacao.navigate('Treino');
+    }
+
+    if (treino.itens.length > 0) {
+      Alert.alert(
+        'Substituir treino atual',
+        'Você já tem um treino em andamento. Ele será descartado e substituído por este modelo.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Substituir', style: 'destructive', onPress: repetir },
+        ]
+      );
+      return;
+    }
+
+    repetir();
+  }
 
   if (historico.length === 0) {
     return (
@@ -70,7 +96,12 @@ export default function HistoricoScreen() {
           <Text style={styles.mes}>{section.rotulo.toUpperCase()}</Text>
         )}
         renderItem={({ item }) => (
-          <CartaoTreino treino={item} onExcluir={() => confirmarExclusao(item)} />
+          <CartaoTreino
+            treino={item}
+            onExcluir={() => confirmarExclusao(item)}
+            onAlternarFavorito={() => alternarFavoritoTreino(item.id)}
+            onRepetir={() => confirmarRepeticao(item)}
+          />
         )}
       />
     </View>
@@ -89,9 +120,13 @@ function Indicador({ rotulo, valor }: { rotulo: string; valor: string }) {
 function CartaoTreino({
   treino,
   onExcluir,
+  onAlternarFavorito,
+  onRepetir,
 }: {
   treino: Treino;
   onExcluir: () => void;
+  onAlternarFavorito: () => void;
+  onRepetir: () => void;
 }) {
   const [aberto, setAberto] = useState(false);
   const data = new Date(treino.data);
@@ -129,6 +164,18 @@ function CartaoTreino({
           <Text style={styles.legenda}>{legenda}</Text>
         </View>
 
+        <Pressable
+          onPress={onAlternarFavorito}
+          hitSlop={10}
+          style={({ pressed }) => pressed && styles.pressionado}
+        >
+          <Ionicons
+            name={treino.favorito ? 'star' : 'star-outline'}
+            size={20}
+            color={treino.favorito ? cores.favorito : cores.textoFraco}
+          />
+        </Pressable>
+
         <Ionicons
           name={aberto ? 'chevron-down' : 'chevron-forward'}
           size={18}
@@ -153,9 +200,19 @@ function CartaoTreino({
             ))}
           </View>
 
-          <Pressable onPress={onExcluir} hitSlop={8}>
-            <Text style={styles.excluir}>Excluir do histórico</Text>
-          </Pressable>
+          <View style={styles.acoes}>
+            <Pressable
+              onPress={onRepetir}
+              style={({ pressed }) => [styles.repetir, pressed && styles.pressionado]}
+            >
+              <Ionicons name="refresh" size={16} color={cores.fundo} />
+              <Text style={styles.repetirTexto}>Repetir este treino</Text>
+            </Pressable>
+
+            <Pressable onPress={onExcluir} hitSlop={8}>
+              <Text style={styles.excluir}>Excluir do histórico</Text>
+            </Pressable>
+          </View>
         </View>
       )}
     </View>
@@ -337,6 +394,25 @@ const styles = StyleSheet.create({
   series: {
     color: cores.textoFraco,
     fontSize: 13,
+  },
+  acoes: {
+    gap: espaco.m,
+    alignItems: 'center',
+  },
+  repetir: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: espaco.p,
+    alignSelf: 'stretch',
+    backgroundColor: cores.destaque,
+    borderRadius: raio.m,
+    paddingVertical: espaco.p + 4,
+  },
+  repetirTexto: {
+    color: cores.fundo,
+    fontSize: 15,
+    fontWeight: '700',
   },
   excluir: {
     color: cores.erro,

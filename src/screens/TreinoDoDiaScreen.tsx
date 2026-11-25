@@ -8,10 +8,12 @@ import {
   Text,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Botao from '../components/Botao';
 import RegistroSeries from '../components/RegistroSeries';
 import { useTreino } from '../contexto/TreinoContext';
 import { useAlturaTeclado } from '../hooks/useAlturaTeclado';
+import { tituloDoTreino } from '../services/analise';
 import { cores, espaco, raio } from '../theme';
 import { ItemTreino } from '../types';
 
@@ -30,6 +32,8 @@ export default function TreinoDoDiaScreen() {
     adicionarSerie,
     removerSerie,
     concluirTreino,
+    treinosFavoritos,
+    repetirTreino,
   } = useTreino();
   const [aviso, setAviso] = useState<string | null>(null);
   const alturaTeclado = useAlturaTeclado();
@@ -74,12 +78,40 @@ export default function TreinoDoDiaScreen() {
 
   if (treino.itens.length === 0) {
     return (
-      <View style={[styles.container, styles.centro]}>
-        <Text style={styles.vazioTitulo}>Nenhum exercício ainda</Text>
-        <Text style={styles.vazioTexto}>
-          Vá até a aba Exercícios, escolha um exercício e toque em adicionar ao
-          treino para montar a sessão de hoje.
-        </Text>
+      <View style={styles.container}>
+        <View style={styles.vazio}>
+          <Text style={styles.vazioTitulo}>Nenhum exercício ainda</Text>
+          <Text style={styles.vazioTexto}>
+            Vá até a aba Exercícios, escolha um exercício e toque em adicionar
+            ao treino para montar a sessão de hoje.
+          </Text>
+        </View>
+
+        {treinosFavoritos.length > 0 && (
+          <View style={styles.modelos}>
+            <Text style={styles.modelosTitulo}>Começar por um treino salvo</Text>
+            {treinosFavoritos.map((modelo) => (
+              <Pressable
+                key={modelo.id}
+                onPress={() => repetirTreino(modelo)}
+                style={({ pressed }) => [
+                  styles.modelo,
+                  pressed && styles.pressionado,
+                ]}
+              >
+                <Ionicons name="star" size={18} color={cores.favorito} />
+                <View style={styles.modeloTexto}>
+                  <Text style={styles.modeloNome}>{tituloDoTreino(modelo)}</Text>
+                  <Text style={styles.modeloDetalhe}>
+                    {modelo.itens.length}{' '}
+                    {modelo.itens.length === 1 ? 'exercício' : 'exercícios'}
+                  </Text>
+                </View>
+                <Ionicons name="refresh" size={18} color={cores.destaque} />
+              </Pressable>
+            ))}
+          </View>
+        )}
       </View>
     );
   }
@@ -261,6 +293,47 @@ const styles = StyleSheet.create({
   },
   pressionado: {
     opacity: 0.7,
+  },
+  vazio: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: espaco.p,
+    paddingHorizontal: espaco.g,
+  },
+  modelos: {
+    gap: espaco.p,
+    paddingBottom: espaco.g,
+  },
+  modelosTitulo: {
+    color: cores.textoFraco,
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  modelo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espaco.m,
+    backgroundColor: cores.superficie,
+    borderColor: cores.borda,
+    borderWidth: 1,
+    borderRadius: raio.m,
+    padding: espaco.m,
+  },
+  modeloTexto: {
+    flex: 1,
+    gap: 2,
+  },
+  modeloNome: {
+    color: cores.texto,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  modeloDetalhe: {
+    color: cores.textoFraco,
+    fontSize: 13,
   },
   vazioTitulo: {
     color: cores.texto,

@@ -32,4 +32,5 @@ export type Treino = {
   itens: ItemTreino[];
   concluido: boolean;
   concluidoEm?: string;
+  favorito?: boolean;
 };

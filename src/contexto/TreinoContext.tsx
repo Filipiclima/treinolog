@@ -30,6 +30,9 @@ type ValorContexto = {
   concluirTreino: () => boolean;
   removerDoHistorico: (treinoId: string) => void;
   limparHistorico: () => void;
+  alternarFavoritoTreino: (treinoId: string) => void;
+  treinosFavoritos: Treino[];
+  repetirTreino: (modelo: Treino) => void;
 };
 
 const TreinoContext = createContext<ValorContexto | null>(null);
@@ -155,6 +158,25 @@ export function TreinoProvider({ children }: { children: ReactNode }) {
     return true;
   }, [treino, historico]);
 
+  const alternarFavoritoTreino = useCallback(
+    (treinoId: string) => {
+      const novoHistorico = historico.map((item) =>
+        item.id === treinoId ? { ...item, favorito: !item.favorito } : item
+      );
+      setHistorico(novoHistorico);
+      salvarHistorico(novoHistorico);
+    },
+    [historico]
+  );
+
+  const repetirTreino = useCallback((modelo: Treino) => {
+    const base = criarTreinoVazio();
+    setTreino({
+      ...base,
+      itens: modelo.itens.map((item) => ({ exercicio: item.exercicio, series: [] })),
+    });
+  }, []);
+
   const limparHistorico = useCallback(() => {
     setHistorico([]);
     salvarHistorico([]);
@@ -183,6 +205,9 @@ export function TreinoProvider({ children }: { children: ReactNode }) {
       concluirTreino,
       removerDoHistorico,
       limparHistorico,
+      alternarFavoritoTreino,
+      treinosFavoritos: historico.filter((item) => item.favorito),
+      repetirTreino,
     }),
     [
       treino,
@@ -197,6 +222,8 @@ export function TreinoProvider({ children }: { children: ReactNode }) {
       concluirTreino,
       removerDoHistorico,
       limparHistorico,
+      alternarFavoritoTreino,
+      repetirTreino,
     ]
   );
 
