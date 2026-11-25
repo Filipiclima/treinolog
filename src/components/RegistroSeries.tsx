@@ -7,13 +7,19 @@ type Props = {
   item: ItemTreino;
   onAdicionar: (repeticoes: number, carga: number) => void;
   onRemoverSerie: (serieId: string) => void;
+  onFocar?: () => void;
 };
 
 function paraNumero(texto: string): number {
   return Number(texto.replace(',', '.'));
 }
 
-export default function RegistroSeries({ item, onAdicionar, onRemoverSerie }: Props) {
+export default function RegistroSeries({
+  item,
+  onAdicionar,
+  onRemoverSerie,
+  onFocar,
+}: Props) {
   const [repeticoes, setRepeticoes] = useState('');
   const [carga, setCarga] = useState('');
   const [erro, setErro] = useState<string | null>(null);
@@ -69,6 +75,8 @@ export default function RegistroSeries({ item, onAdicionar, onRemoverSerie }: Pr
           placeholderTextColor={cores.textoFraco}
           keyboardType="number-pad"
           maxLength={3}
+          onFocus={onFocar}
+          returnKeyType="next"
         />
         <TextInput
           style={styles.campo}
@@ -78,6 +86,7 @@ export default function RegistroSeries({ item, onAdicionar, onRemoverSerie }: Pr
           placeholderTextColor={cores.textoFraco}
           keyboardType="decimal-pad"
           maxLength={6}
+          onFocus={onFocar}
         />
         <Pressable
           onPress={confirmar}

@@ -1,10 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -13,6 +11,7 @@ import {
 import Botao from '../components/Botao';
 import RegistroSeries from '../components/RegistroSeries';
 import { useTreino } from '../contexto/TreinoContext';
+import { useAlturaTeclado } from '../hooks/useAlturaTeclado';
 import { cores, espaco, raio } from '../theme';
 import { ItemTreino } from '../types';
 
@@ -33,6 +32,18 @@ export default function TreinoDoDiaScreen() {
     concluirTreino,
   } = useTreino();
   const [aviso, setAviso] = useState<string | null>(null);
+  const alturaTeclado = useAlturaTeclado();
+  const listaRef = useRef<FlatList<ItemTreino>>(null);
+
+  function rolarParaItem(indice: number) {
+    setTimeout(() => {
+      listaRef.current?.scrollToIndex({
+        index: indice,
+        viewPosition: 0,
+        animated: true,
+      });
+    }, 300);
+  }
 
   function confirmarConclusao() {
     Alert.alert(
@@ -83,10 +94,7 @@ export default function TreinoDoDiaScreen() {
   );
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={styles.container}>
       <Text style={styles.titulo}>{treino.titulo}</Text>
       <Text style={styles.resumo}>
         {treino.itens.length}{' '}
@@ -96,13 +104,19 @@ export default function TreinoDoDiaScreen() {
       </Text>
 
       <FlatList
+        ref={listaRef}
         data={treino.itens}
         keyExtractor={(item) => String(item.exercicio.id)}
-        contentContainerStyle={styles.lista}
+        contentContainerStyle={[
+          styles.lista,
+          { paddingBottom: alturaTeclado + espaco.gg },
+        ]}
         keyboardShouldPersistTaps="handled"
-        renderItem={({ item }) => (
+        onScrollToIndexFailed={() => undefined}
+        renderItem={({ item, index }) => (
           <Cartao
             item={item}
+            onFocar={() => rolarParaItem(index)}
             onRemover={() => removerExercicio(item.exercicio.id)}
             onAdicionarSerie={(reps, carga) =>
               adicionarSerie(item.exercicio.id, reps, carga)
@@ -117,18 +131,25 @@ export default function TreinoDoDiaScreen() {
           </View>
         }
       />
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
 type CartaoProps = {
   item: ItemTreino;
+  onFocar: () => void;
   onRemover: () => void;
   onAdicionarSerie: (repeticoes: number, carga: number) => void;
   onRemoverSerie: (serieId: string) => void;
 };
 
-function Cartao({ item, onRemover, onAdicionarSerie, onRemoverSerie }: CartaoProps) {
+function Cartao({
+  item,
+  onFocar,
+  onRemover,
+  onAdicionarSerie,
+  onRemoverSerie,
+}: CartaoProps) {
   const volume = volumeDoItem(item);
 
   return (
@@ -159,6 +180,7 @@ function Cartao({ item, onRemover, onAdicionarSerie, onRemoverSerie }: CartaoPro
         item={item}
         onAdicionar={onAdicionarSerie}
         onRemoverSerie={onRemoverSerie}
+        onFocar={onFocar}
       />
     </View>
   );
