@@ -85,7 +85,7 @@ export default function App() {
                 name="Historico"
                 component={HistoricoScreen}
                 options={{
-                  title: 'Histórico',
+                  headerShown: false,
                   tabBarLabel: 'Histórico',
                   tabBarIcon: ({ color, size }) => (
                     <Ionicons name="time-outline" size={size} color={color} />

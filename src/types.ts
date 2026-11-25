@@ -31,4 +31,5 @@ export type Treino = {
   titulo: string;
   itens: ItemTreino[];
   concluido: boolean;
+  concluidoEm?: string;
 };

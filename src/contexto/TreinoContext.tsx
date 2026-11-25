@@ -141,7 +141,11 @@ export function TreinoProvider({ children }: { children: ReactNode }) {
     const temSerie = treino.itens.some((item) => item.series.length > 0);
     if (!temSerie) return false;
 
-    const concluido: Treino = { ...treino, concluido: true };
+    const concluido: Treino = {
+      ...treino,
+      concluido: true,
+      concluidoEm: new Date().toISOString(),
+    };
     const novoHistorico = [concluido, ...historico];
 
     setHistorico(novoHistorico);
