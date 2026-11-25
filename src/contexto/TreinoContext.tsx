@@ -29,6 +29,7 @@ type ValorContexto = {
   historico: Treino[];
   concluirTreino: () => boolean;
   removerDoHistorico: (treinoId: string) => void;
+  limparHistorico: () => void;
 };
 
 const TreinoContext = createContext<ValorContexto | null>(null);
@@ -150,6 +151,11 @@ export function TreinoProvider({ children }: { children: ReactNode }) {
     return true;
   }, [treino, historico]);
 
+  const limparHistorico = useCallback(() => {
+    setHistorico([]);
+    salvarHistorico([]);
+  }, []);
+
   const removerDoHistorico = useCallback(
     (treinoId: string) => {
       const novoHistorico = historico.filter((item) => item.id !== treinoId);
@@ -172,6 +178,7 @@ export function TreinoProvider({ children }: { children: ReactNode }) {
       historico,
       concluirTreino,
       removerDoHistorico,
+      limparHistorico,
     }),
     [
       treino,
@@ -185,6 +192,7 @@ export function TreinoProvider({ children }: { children: ReactNode }) {
       historico,
       concluirTreino,
       removerDoHistorico,
+      limparHistorico,
     ]
   );
 

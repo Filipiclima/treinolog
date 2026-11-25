@@ -14,6 +14,7 @@ type ValorContexto = {
   favoritos: number[];
   ehFavorito: (exercicioId: number) => boolean;
   alternarFavorito: (exercicioId: number) => void;
+  limparFavoritos: () => void;
   total: number;
 };
 
@@ -50,9 +51,17 @@ export function FavoritosProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const limparFavoritos = useCallback(() => setFavoritos([]), []);
+
   const valor = useMemo(
-    () => ({ favoritos, ehFavorito, alternarFavorito, total: favoritos.length }),
-    [favoritos, ehFavorito, alternarFavorito]
+    () => ({
+      favoritos,
+      ehFavorito,
+      alternarFavorito,
+      limparFavoritos,
+      total: favoritos.length,
+    }),
+    [favoritos, ehFavorito, alternarFavorito, limparFavoritos]
   );
 
   return (

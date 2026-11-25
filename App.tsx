@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { FavoritosProvider } from './src/contexto/FavoritosContext';
 import { TreinoProvider } from './src/contexto/TreinoContext';
 import ExerciciosStack from './src/navigation/ExerciciosStack';
+import AjustesScreen from './src/screens/AjustesScreen';
 import HistoricoScreen from './src/screens/HistoricoScreen';
 import TreinoDoDiaScreen from './src/screens/TreinoDoDiaScreen';
 import { cores } from './src/theme';
@@ -91,7 +92,18 @@ export default function App() {
                   ),
                 }}
               />
-            </Abas.Navigator>
+              <Abas.Screen
+              name="Ajustes"
+              component={AjustesScreen}
+              options={{
+                title: 'Ajustes',
+                tabBarLabel: 'Ajustes',
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons name="settings-outline" size={size} color={color} />
+                ),
+              }}
+            />
+          </Abas.Navigator>
           </NavigationContainer>
         </TreinoProvider>
       </FavoritosProvider>

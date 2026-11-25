@@ -48,3 +48,16 @@ export async function obterCatalogo(forcarAtualizacao = false): Promise<Exercici
     throw erro;
   }
 }
+
+export async function limparCacheCatalogo(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(CHAVE);
+  } catch {
+    return;
+  }
+}
+
+export async function dataDoCatalogo(): Promise<Date | null> {
+  const cache = await lerCache();
+  return cache ? new Date(cache.salvoEm) : null;
+}
