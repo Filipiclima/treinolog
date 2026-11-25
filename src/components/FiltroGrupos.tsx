@@ -12,6 +12,7 @@ export default function FiltroGrupos({ grupos, selecionado, onSelecionar }: Prop
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
+      style={styles.area}
       contentContainerStyle={styles.faixa}
       keyboardShouldPersistTaps="handled"
     >
@@ -36,11 +37,17 @@ export default function FiltroGrupos({ grupos, selecionado, onSelecionar }: Prop
 }
 
 const styles = StyleSheet.create({
+  area: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   faixa: {
     gap: espaco.p,
     paddingRight: espaco.m,
+    alignItems: 'center',
   },
   chip: {
+    justifyContent: 'center',
     backgroundColor: cores.superficie,
     borderColor: cores.borda,
     borderWidth: 1,
