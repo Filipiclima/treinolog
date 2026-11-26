@@ -44,4 +44,5 @@ A pasta src concentra o código da aplicação. Dentro dela, screens guarda as t
 
 ## Autor
 
-Filipi Conceição Lima
+Filipi Lima
+Luiz Eduardo
